@@ -104,3 +104,15 @@ class Certificate(models.Model):
         verbose_name = "Сертификат"
         verbose_name_plural = "Сертификаты"
         unique_together = ['seminar', 'order_number']
+
+    def save(self, *args, **kwargs):
+        if not self.certificate_number:
+            target_date = self.seminar.date_end if self.seminar.date_end else self.seminar.date_start
+
+            date_str = target_date.strftime('%d%m%Y')
+
+            order_str = f"{self.order_number:02d}"
+
+            self.certificate_number = f"№ {order_str}-{date_str}"
+
+        super().save(*args, **kwargs)
