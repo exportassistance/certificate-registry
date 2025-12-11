@@ -100,30 +100,34 @@ STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 # --- MEDIA FILES (Supabase Storage via S3) ---
-
-# Берем настройки из переменных окружения
 AWS_ACCESS_KEY_ID = os.environ.get('SUPABASE_ACCESS_KEY_ID')
 AWS_SECRET_ACCESS_KEY = os.environ.get('SUPABASE_SECRET_ACCESS_KEY')
 AWS_S3_ENDPOINT_URL = os.environ.get('SUPABASE_ENDPOINT_URL')
-AWS_STORAGE_BUCKET_NAME = 'media' # Имя бакета в Supabase (должен быть создан!)
-AWS_S3_REGION_NAME = 'eu-central-1' # Регион бакета (обычно Frankfurt для Supabase)
-AWS_DEFAULT_ACL = 'public-read' # Файлы доступны для чтения всем
+AWS_STORAGE_BUCKET_NAME = 'media'
+AWS_S3_REGION_NAME = 'eu-central-1'
+AWS_DEFAULT_ACL = 'public-read'
 AWS_S3_OBJECT_PARAMETERS = {'CacheControl': 'max-age=86400'}
-AWS_QUERYSTRING_AUTH = False # Прямые ссылки без временных токенов
+AWS_QUERYSTRING_AUTH = False
 
-# Настраиваем домен для ссылок (чтобы они открывались как прямые URL)
-# Ссылка будет вида: https://<project_id>.supabase.co/storage/v1/object/public/media/
+# 1. Сначала объявляем переменную пустой, чтобы избежать NameError
+AWS_S3_CUSTOM_DOMAIN = None
+
+# 2. Пытаемся сформировать домен, только если есть URL
 if AWS_S3_ENDPOINT_URL:
     try:
-        # Извлекаем project_id из URL (https://<project_id>.supabase.co...)
+        # Извлекаем project_id из URL
         _PROJECT_ID = AWS_S3_ENDPOINT_URL.split('https://')[1].split('.')[0]
         AWS_S3_CUSTOM_DOMAIN = f'{_PROJECT_ID}.supabase.co/storage/v1/object/public/{AWS_STORAGE_BUCKET_NAME}'
     except IndexError:
-        AWS_S3_CUSTOM_DOMAIN = None
+        pass
 
-MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/' if AWS_S3_CUSTOM_DOMAIN else '/media/'
+# 3. Настраиваем MEDIA_URL
+if AWS_S3_CUSTOM_DOMAIN:
+    MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/'
+else:
+    MEDIA_URL = '/media/'
 
-# Единая настройка хранилищ (Django 5 Standard)
+# Единая настройка хранилищ
 STORAGES = {
     "staticfiles": {
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
