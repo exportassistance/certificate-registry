@@ -12,7 +12,7 @@ class Seminar(models.Model):
                                default='CSE')
     organization_name = models.CharField(max_length=255, verbose_name="Наименование организации")
     registration_number = models.CharField(max_length=50, verbose_name="УНП (Registration Number)")
-    title = models.CharField(max_length=142, verbose_name="Название семинара")
+    title = models.CharField(max_length=255, verbose_name="Название семинара")
     program = models.TextField(verbose_name="Программа семинара")
     date_start = models.DateField(verbose_name="Дата начала")
     date_end = models.DateField(null=True, blank=True, verbose_name="Дата окончания")

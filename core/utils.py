@@ -30,14 +30,28 @@ def generate_certificates(certificate):
             'font_sec': font_times,
 
             'size_name': 110,
-            'size_title': 120,
-            'size_prog': 60,
             'size_small': 50,
-            'name': {'y': 540, 'x': 'center'},
-            'title': {'y': 920, 'x': 'center'},
-            'program': {'y': 1380, 'x': 'adaptive', 'max_width': 2200},
-            'number': {'y': 2980, 'x': 120},
-            'date': {'y': 3100, 'x': 60},
+
+            'name': {'y': 540, 'x': 'center', 'type': 'simple'},
+            'number': {'y': 2980, 'x': 120, 'type': 'simple'},
+            'date': {'y': 3100, 'x': 60, 'type': 'simple'},
+
+            'title': {
+                'type': 'autofit_v_center',
+                'y_start': 860,
+                'y_end': 1225,
+                'max_width': 2200,
+                'max_size': 120,
+                'min_size': 40
+            },
+            'program': {
+                'type': 'autofit_top',
+                'y_start': 1330,
+                'y_end': 2685,
+                'max_width': 2200,
+                'max_size': 60,
+                'min_size': 25
+            },
         }
 
     else:
@@ -49,15 +63,30 @@ def generate_certificates(certificate):
             'color_text': (50, 50, 50),
             'font_main': font_montserrat,
             'font_sec': font_roboto,
+
             'size_name': 125,
-            'size_title': 90,
-            'size_prog': 50,
             'size_small': 50,
-            'name': {'y': 390, 'x': 'center'},
-            'title': {'y': 780, 'x': 'center'},
-            'program': {'y': 1300, 'x': 'adaptive', 'max_width': 2300},
-            'number': {'y': 2955, 'x': 120},
-            'date': {'y': 3025, 'x': 200},
+
+            'name': {'y': 390, 'x': 'center', 'type': 'simple'},
+            'number': {'y': 2955, 'x': 120, 'type': 'simple'},
+            'date': {'y': 3025, 'x': 200, 'type': 'simple'},
+
+            'title': {
+                'type': 'autofit_v_center',
+                'y_start': 750,
+                'y_end': 1135,
+                'max_width': 2300,
+                'max_size': 90,
+                'min_size': 40
+            },
+            'program': {
+                'type': 'autofit_top',
+                'y_start': 1250,
+                'y_end': 2840,
+                'max_width': 2300,
+                'max_size': 60,
+                'min_size': 25
+            },
         }
 
     def wrap_text_pixel(text, font, max_width, draw):
@@ -88,7 +117,6 @@ def generate_certificates(certificate):
     def process_image(template_name):
         path = os.path.join(ASSETS_DIR, 'templates', template_name)
         if not os.path.exists(path):
-            print(f"Template not found: {path}")
             return None
 
         image = Image.open(path).convert('RGB')
@@ -98,27 +126,70 @@ def generate_certificates(certificate):
         def draw_field(text, key, font_path, size, color):
             if not text: return
             cfg = style[key]
-            font = get_font(font_path, size)
 
-            if cfg.get('x') == 'adaptive':
-                lines = wrap_text_pixel(text, font, cfg['max_width'], draw)
+            if cfg.get('type') == 'autofit_v_center' or cfg.get('type') == 'autofit_top':
+                max_h = cfg['y_end'] - cfg['y_start']
+                max_w = cfg['max_width']
+                current_size = cfg['max_size']
+                min_size = cfg['min_size']
+
+                final_font = None
+                final_lines = []
+                final_total_h = 0
+
+                while current_size >= min_size:
+                    font = get_font(font_path, current_size)
+                    lines = wrap_text_pixel(text, font, max_w, draw)
+
+                    total_h = 0
+                    for line in lines:
+                        bbox = draw.textbbox((0, 0), line, font=font)
+                        total_h += (bbox[3] - bbox[1]) + 15
+                    total_h -= 15
+
+                    if total_h <= max_h:
+                        final_font = font
+                        final_lines = lines
+                        final_total_h = total_h
+                        break
+
+                    current_size -= 2
+
+                if final_font is None:
+                    final_font = get_font(font_path, min_size)
+                    final_lines = wrap_text_pixel(text, final_font, max_w, draw)
+                    final_total_h = 0
+                    for line in final_lines:
+                        bbox = draw.textbbox((0, 0), line, final_font, fill=color)
+                        final_total_h += (bbox[3] - bbox[1]) + 15
+                    final_total_h -= 15
+
+                start_y = cfg['y_start']
+                if cfg.get('type') == 'autofit_v_center':
+                    start_y = cfg['y_start'] + (max_h - final_total_h) / 2
 
                 max_line_w = 0
-                for line in lines:
-                    bbox = draw.textbbox((0, 0), line, font=font)
-                    if (bbox[2] - bbox[0]) > max_line_w:
-                        max_line_w = (bbox[2] - bbox[0])
+                for line in final_lines:
+                    bbox = draw.textbbox((0, 0), line, font=final_font)
+                    w = bbox[2] - bbox[0]
+                    if w > max_line_w: max_line_w = w
 
-                start_x = (img_w - max_line_w) / 2
+                block_start_x = (img_w - max_line_w) / 2
 
-                current_y = cfg['y']
-                for line in lines:
-                    draw.text((start_x, current_y), line, font=font, fill=color)
-                    bbox = draw.textbbox((0, 0), line, font=font)
+                curr_y = start_y
+                for line in final_lines:
+                    bbox = draw.textbbox((0, 0), line, font=final_font)
+                    line_w = bbox[2] - bbox[0]
+                    if cfg.get('type') == 'autofit_v_center':
+                        draw_x = (img_w - line_w) / 2
+                    else:
+                        draw_x = block_start_x
+
+                    draw.text((draw_x, curr_y), line, font=final_font, fill=color)
                     h = bbox[3] - bbox[1]
-                    current_y += h + 15
-
+                    curr_y += h + 15
             elif cfg.get('x') == 'center':
+                font = get_font(font_path, size)
                 lines = wrap_text_pixel(text, font, img_w - 200, draw)
                 current_y = cfg['y']
                 for line in lines:
@@ -130,11 +201,12 @@ def generate_certificates(certificate):
                     current_y += h + 15
 
             else:
+                font = get_font(font_path, size)
                 draw.text((cfg['x'], cfg['y']), str(text), font=font, fill=color)
 
         draw_field(certificate.full_name, 'name', style['font_main'], style['size_name'], style['color_text'])
-        draw_field(certificate.seminar.title, 'title', style['font_main'], style['size_title'], style['color_title'])
-        draw_field(certificate.seminar.program, 'program', style['font_sec'], style['size_prog'], style['color_text'])
+        draw_field(certificate.seminar.title, 'title', style['font_main'], 0, style['color_title'])
+        draw_field(certificate.seminar.program, 'program', style['font_sec'], 0, style['color_text'])
 
         clean_num = certificate.certificate_number.replace('№', '').strip()
         draw_field(clean_num, 'number', style['font_sec'], style['size_small'], style['color_text'])
