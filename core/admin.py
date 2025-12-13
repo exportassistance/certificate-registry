@@ -6,41 +6,44 @@ from django.contrib import messages
 from .models import Seminar, Certificate
 
 
-@admin.action(description="🔄 Перегенерировать документы (PDF/JPG)")
+@admin.action(description="🔄 Перегенерировать документы")
 def regenerate_certificates(modeladmin, request, queryset):
     count = 0
     for cert in queryset:
-
+        if cert.manual_upload:
+            continue
         if cert.file_print: cert.file_print.delete(save=False)
         if cert.file_web: cert.file_web.delete(save=False)
         if cert.preview_image: cert.preview_image.delete(save=False)
 
+        cert.file_print = None
+        cert.file_web = None
+        cert.preview_image = None
+
         cert.save()
         count += 1
-
-    modeladmin.message_user(request, f"Обновлено сертификатов: {count}", messages.SUCCESS)
+    modeladmin.message_user(request, f"Успешно перегенерировано: {count}", messages.SUCCESS)
 
 
 @admin.action(description="🔄 Обновить сертификаты всех участников")
 def regenerate_seminar_certificates(modeladmin, request, queryset):
-    total_certs = 0
+    total = 0
     for seminar in queryset:
         certs = seminar.certificates.all()
         for cert in certs:
-            if cert.file_print: cert.file_print.delete(save=False)
-            if cert.file_web: cert.file_web.delete(save=False)
-            if cert.preview_image: cert.preview_image.delete(save=False)
-            cert.save()
-            total_certs += 1
-
-    modeladmin.message_user(request, f"Обработано семинаров: {queryset.count()}. Обновлено сертификатов: {total_certs}",
-                            messages.SUCCESS)
+            if not cert.manual_upload:
+                if cert.file_print: cert.file_print.delete(save=False)
+                if cert.file_web: cert.file_web.delete(save=False)
+                if cert.preview_image: cert.preview_image.delete(save=False)
+                cert.save()
+                total += 1
+    modeladmin.message_user(request, f"Обновлено сертификатов: {total}", messages.SUCCESS)
 
 
 class CertificateInline(admin.TabularInline):
     model = Certificate
     extra = 0
-    fields = ('full_name', 'order_number', 'certificate_number')
+    fields = ('full_name', 'certificate_number', 'manual_upload')
     readonly_fields = ('certificate_number',)
     can_delete = True
     show_change_link = True
@@ -54,8 +57,6 @@ class SeminarAdmin(admin.ModelAdmin):
     search_fields = ('title', 'organization_name', 'registration_number', 'program')
     list_filter = ('company', 'date_start')
     inlines = [CertificateInline]
-
-    # Добавляем действие сюда
     actions = [regenerate_seminar_certificates]
 
     formfield_overrides = {
@@ -77,12 +78,12 @@ class SeminarAdmin(admin.ModelAdmin):
     def title_short(self, obj):
         return (obj.title[:50] + '...') if len(obj.title) > 50 else obj.title
 
-    title_short.short_description = "Название семинара"
+    title_short.short_description = "Название"
 
     def count_certificates(self, obj):
         return obj.certificates.count()
 
-    count_certificates.short_description = "Участников"
+    count_certificates.short_description = "Людей"
 
 
 @admin.register(Certificate)
@@ -91,19 +92,24 @@ class CertificateAdmin(admin.ModelAdmin):
                     'link_web')
     search_fields = ('full_name', 'certificate_number', 'seminar__title', 'seminar__organization_name')
     list_filter = ('seminar__company', 'seminar__date_start')
-
-    # Добавляем действие сюда
     actions = [regenerate_certificates]
 
     fieldsets = (
-        ("Информация об участнике", {
-            'fields': ('seminar', 'full_name', 'order_number', 'certificate_number')
+        ("Участник", {
+            'fields': ('seminar', 'full_name', 'certificate_number')
         }),
-        ("Файлы", {
-            'fields': ('preview_image', 'file_print', 'file_web', 'manual_upload'),
+        ("Ручная загрузка (Приоритет)", {
+            'fields': ('manual_upload',),
+            'description': 'Если загрузить сюда PDF, генерация будет отключена, а этот файл будет использоваться для скачивания.'
+        }),
+        ("Сгенерированные файлы", {
+            'fields': ('preview_image', 'file_print', 'file_web'),
         }),
     )
-    readonly_fields = ('certificate_number', 'file_print', 'file_web', 'preview_image')
+    readonly_fields = ('certificate_number', 'file_print', 'file_web', 'preview_image', 'seminar')
+
+    def has_add_permission(self, request):
+        return False
 
     def company_badge(self, obj):
         colors = {'CSE': 'red', 'NIKA': 'blue'}
@@ -114,13 +120,11 @@ class CertificateAdmin(admin.ModelAdmin):
         )
 
     company_badge.short_description = "Реестр"
-    company_badge.admin_order_field = 'seminar__company'
 
     def get_org_name(self, obj):
         return obj.seminar.organization_name
 
     get_org_name.short_description = "Организация"
-    get_org_name.admin_order_field = 'seminar__organization_name'
 
     def seminar_link(self, obj):
         return obj.seminar.title
@@ -139,4 +143,4 @@ class CertificateAdmin(admin.ModelAdmin):
             return format_html('<a href="{}" target="_blank">📄 PDF (С печатью)</a>', obj.file_web.url)
         return "-"
 
-    link_web.short_description = "Клиент"
+    link_web.short_description = "Веб"
