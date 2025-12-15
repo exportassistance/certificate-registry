@@ -72,19 +72,19 @@ def generate_certificates(certificate):
             'name': {
                 'type': 'autofit',
                 'align': 'center',
-                'y_start': 495, 'y_end': 705,
+                'y_start': 455, 'y_end': 665,
                 'max_width': 2200, 'max_size': 110, 'min_size': 50
             },
             'title': {
                 'type': 'autofit',
                 'align': 'center',
-                'y_start': 860, 'y_end': 1225,
+                'y_start': 820, 'y_end': 1185,
                 'max_width': 2200, 'max_size': 120, 'min_size': 40
             },
             'program': {
                 'type': 'autofit',
                 'align': 'left',
-                'y_start': 1330, 'y_end': 2685,
+                'y_start': 1370, 'y_end': 2685,
                 'max_width': 2200, 'max_size': 60, 'min_size': 25
             },
             'number': {'type': 'simple', 'y': 2980, 'x': 120, 'size': 50},
