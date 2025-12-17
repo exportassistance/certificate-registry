@@ -1,0 +1,123 @@
+/* core/static/css/nika.css */
+
+body {
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    min-height: 100vh;
+    font-family: 'Roboto', sans-serif;
+    padding-bottom: 50px;
+}
+
+.search-card {
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+    background: white;
+}
+
+.nika-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: #004099;
+    line-height: 1.2;
+}
+
+.btn-blue-custom {
+    background: linear-gradient(45deg, #004099, #0056b3);
+    border: none;
+    color: white;
+    border-radius: 25px;
+    padding: 10px 30px;
+    font-weight: 600;
+    transition: all 0.3s;
+}
+
+.btn-blue-custom:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 64, 153, 0.3);
+    color: white;
+}
+
+.seminar-card {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+    margin-bottom: 30px;
+    overflow: hidden;
+    border-top: 5px solid #004099;
+}
+
+.seminar-title-block {
+    background: #f0f7ff;
+    padding: 15px 20px;
+    border-bottom: 1px solid #e1e8f0;
+    color: #004099;
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+
+.info-row {
+    padding: 12px 15px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.info-label {
+    font-weight: 600;
+    color: #666;
+}
+
+.info-value {
+    color: #222;
+    font-weight: 500;
+}
+
+.certs-area {
+    background: #fff;
+    padding: 20px;
+}
+
+.cert-card {
+    border: 1px solid #eee;
+    border-radius: 8px;
+    padding: 10px;
+    text-align: center;
+    height: 100%;
+    transition: 0.2s;
+    background: #fff;
+}
+
+.cert-card:hover {
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    border-color: #b3d7ff;
+}
+
+.cert-thumb {
+    width: 100%;
+    max-width: 120px;
+    height: auto;
+    aspect-ratio: 1/1.41;
+    object-fit: cover;
+    border: 1px solid #ddd;
+    margin-bottom: 10px;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.cert-name {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #004099;
+    margin-bottom: 8px;
+    line-height: 1.3;
+    min-height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.download-btn {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 5px 15px;
+    border-radius: 20px;
+}
