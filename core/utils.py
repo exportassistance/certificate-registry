@@ -78,7 +78,7 @@ def generate_certificates(certificate):
             'title': {
                 'type': 'autofit',
                 'align': 'center',
-                'y_start': 820, 'y_end': 1185,
+                'y_start': 860, 'y_end': 1185,
                 'max_width': 2200, 'max_size': 90, 'min_size': 40
             },
             'program': {

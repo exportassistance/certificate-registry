@@ -4,27 +4,26 @@ from .models import Seminar
 
 
 def cse_search(request):
-    if 'q' in request.GET:
-        query = request.GET.get('q', '').strip()
+    query = request.GET.get('q', '').strip()
+    results = []
+    error_message = None
+
+    if 'q' in request.GET: 
         if not query:
             error_message = "Пожалуйста, введите запрос."
-            results = []
         elif len(query) < 3:
-            error_message = "Введите минимум 3 символа для поиска."
-            results = []
+            error_message = "Введите минимум 3 символа."
         else:
-            error_message = None
+            
+            clean_query = query.replace('№', '').strip()
             results = Seminar.objects.filter(company='CSE').filter(
-                Q(organization_name__icontains=query) |
-                Q(registration_number__icontains=query) |
-                Q(title__icontains=query) |
-                Q(certificates__full_name__icontains=query) |
-                Q(certificates__certificate_number__icontains=query)
+                Q(organization_name__iexact=query) |
+                Q(registration_number__iexact=query) |  
+                Q(certificates__full_name__iexact=query) |
+                Q(certificates__certificate_number__endswith=clean_query)
             ).distinct()
-    else:
-        query = ''
-        results = []
-        error_message = None
+
+       
 
     return render(request, 'cse_search.html', {
         'results': results,
@@ -34,27 +33,24 @@ def cse_search(request):
 
 
 def nika_search(request):
+    query = request.GET.get('q', '').strip()
+    results = []
+    error_message = None
+
     if 'q' in request.GET:
-        query = request.GET.get('q', '').strip()
         if not query:
             error_message = "Please enter a search query."
-            results = []
         elif len(query) < 3:
             error_message = "Please enter at least 3 characters."
-            results = []
         else:
-            error_message = None
+            clean_query = query.replace('№', '').replace('No', '').strip()
             results = Seminar.objects.filter(company='NIKA').filter(
-                Q(organization_name__icontains=query) |
-                Q(registration_number__icontains=query) |
-                Q(title__icontains=query) |
-                Q(certificates__full_name__icontains=query) |
-                Q(certificates__certificate_number__icontains=query)
+                Q(organization_name__iexact=query) |
+                Q(registration_number__iexact=query) |
+                Q(certificates__full_name__iexact=query) |
+                Q(certificates__certificate_number__iexact=query)|
+                Q(certificates__certificate_number__endswith=clean_query)
             ).distinct()
-    else:
-        query = ''
-        results = []
-        error_message = None
 
     return render(request, 'nika_search.html', {
         'results': results,
